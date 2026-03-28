@@ -1,8 +1,16 @@
-from transformers import pipeline
+import requests
+import os
 
-# Load a Hugging Face emotion model
-classifier = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", top_k=1)
+API_URL = "https://api-inference.huggingface.co/models/j-hartmann/emotion-english-distilroberta-base"
+
+headers = {
+    "Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_KEY')}"
+}
 
 def analyze_emotion(text: str) -> str:
-    result = classifier(text)[0][0]   # top prediction
-    return result["label"].lower()
+    response = requests.post(API_URL, headers=headers, json={"inputs": text})
+    result = response.json()
+
+    if isinstance(result, list):
+        return result[0][0]["label"].lower()
+    return "neutral"
